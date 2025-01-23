@@ -1,0 +1,459 @@
+# This file lists all relevant scripts, using the same structure that was used for the methods section in the publication.
+# Scripts may appear several times if they encompass analyses from several methods subsections.
+# At the end, this list includes scripts performing general plot optimizations and a script generating the supplementary tables for the publication.
+
+
+######
+## FACS sorting of T cells from blood and skin
+
+# Visualization of CCR8 expression levels in skin Tregs cells and blood Treg cells
+plot_facs_result_ccr8_expression_on_skin_Tregs.R
+
+
+
+
+######
+## Preprocessing of whole-genome bisulfite sequencing data
+
+# Analysis of CH methylation
+generate_bsseq_object_ch_methylation_smoothing_meth_distribution.R
+
+# Further quality control after alignment and bsseq object generation
+quality_control_after_alignment_and_bsseq_obj_generation.R
+
+# Smoothing of methylation values
+smoothing.R
+  
+  
+  
+  
+######
+## UMAP visualization of scATAC-seq data
+
+# UMAP space of all cells belonging to relevant cell types
+generate_atac_umap_space_w_considered_cell_types.R
+
+  
+  
+  
+######
+## Principal component analysis (PCA)
+
+# Principal component analysis
+pca_merged_samples.R
+  
+  
+  
+  
+######
+## Analysis of global methylation
+
+# Computation of global methylation.
+global_methylation.R
+
+# Methylation circos plot.
+methylation_circos_plot.R
+  
+  
+  
+  
+######
+## Extraction of methylation-level cell type signatures
+
+# Signature extraction
+cell_type_signatures_from_multi_class_comparison.R
+
+# Descriptive plots for cell type signatures (e.g. heat map; distribution across gene regions and CpG islands)
+cell_type_signatures_from_multi_class_comparison_diagnostic_plots.R
+  
+  
+  
+  
+######
+## Intervals defined with respect to gene bodies and CpG islands
+  
+# Descriptive plots for cell type signatures (e.g. heat map; distribution across gene regions and CpG islands)
+cell_type_signatures_from_multi_class_comparison_diagnostic_plots.R
+
+# Proportions of regions centered in specific intervals w.r.t. gene bodies and CpG islands.
+cell_type_signatures_from_multi_class_comparison_diagnostic_plots_proportions_of_signature_positions.R
+  
+  
+  
+  
+######
+## Differential methylation analysis
+
+# Differential methylation between blood naive Tconv cells and blood naive Treg cells
+diff_meth_blood_naive_tconvs_blood_naive_tregs.R
+
+# Differential methylation between blood naive Tconv cells and blood naive Treg cells: Heat map
+diff_meth_blood_naive_tregs_blood_naive_tconvs_heatmap.R
+
+# Differential methylation between blood naive Tconv cells and blood naive Treg cells: Heat map including skin Treg cells and fat Treg cells
+diff_meth_blood_naive_tregs_blood_naive_tconvs_heatmap_w_skin_and_fat.R
+
+# Differential methylation between blood naive Tconv cells and blood naive Treg cells: Heat map including all main cell types
+diff_meth_blood_naive_tregs_blood_naive_tconvs_heatmap_w_all_main_celltypes.R
+
+# Differential methylation between blood naive Tconv cells and blood naive Treg cells: Track plots for prominent DMRs
+diff_meth_blood_naive_tconvs_blood_naive_tregs_track_plots_top_regions.R
+
+# Differential methylation between skin Treg cells and blood naive Treg cells
+diff_meth_skin_tregs_blood_naive_tregs.R
+
+# Differential methylation between skin Treg cells and blood naive Treg cells: Heat map
+diff_meth_skin_tregs_blood_naive_tregs_heatmap.R
+
+# Differential methylation between skin Treg cells and blood naive Treg cells: Heat map including fat Treg cells
+diff_meth_skin_tregs_blood_naive_tregs_heatmap_w_fat.R
+
+# Differential methylation between skin Treg cells and blood naive Treg cells: Heat map including all main cell types
+diff_meth_skin_tregs_blood_naive_tregs_heatmap_w_all_main_celltypes.R
+
+# Differential methylation between skin Treg cells and blood naive Treg cells: Track plots for prominent DMRs
+diff_meth_skin_tregs_blood_naive_tregs_track_plots_top_regions.R
+  
+  
+  
+  
+######
+## Differential peak accessibility analysis in scATAC-seq data
+
+# Pair-wise-differential accessibility analysis between relevant cell types
+diff_accessibility_pairwise_comparisons.R
+  
+# Differential accessibility between blood naive Tconv cells and blood naive Treg cells: Heat map
+diff_accessibility_blood_naive_tregs_blood_naive_tconvs_heatmap.R
+
+# Differential accessibility between blood naive Tconv cells and blood naive Treg cells: Heat map including skin Treg cells and fat Treg cells
+diff_accessibility_blood_naive_tregs_blood_naive_tconvs_heatmap_w_skin_and_fat.R
+
+# Differential accessibility between blood naive Tconv cells and blood naive Treg cells: Heat map including all main cell types
+diff_accessibility_blood_naive_tregs_blood_naive_tconvs_heatmap_w_all_main_celltypes.R
+
+# Differential accessibility between skin Treg cells and blood naive Treg cells: Heat map
+diff_accessibility_blood_naive_tregs_skin_tregs_heatmap.R
+
+# Differential accessibility between skin Treg cells and blood naive Treg cells: Heat map including fat Treg cells
+diff_accessibility_blood_naive_tregs_skin_tregs_heatmap_w_fat.R
+
+# Differential accessibility between skin Treg cells and blood naive Treg cells: Heat map including all main cell types
+diff_accessibility_blood_naive_tregs_skin_tregs_heatmap_w_all_main_celltypes.R
+  
+  
+  
+  
+######
+## Differential expression analysis in RNA sequencing data
+
+# Differential gene expression analysis
+differential_gene_expression_all_celltypes.R
+
+# Differential gene expression between blood naive Tconv cells and blood naive Treg cells: Heat map
+diff_expr_blood_naive_tconvs_blood_naive_tregs_heatmap.R
+
+# Differential gene expression between blood naive Tconv cells and blood naive Treg cells: Heat map including skin Treg cells and fat Treg cells
+diff_expr_blood_naive_tconvs_blood_naive_tregs_heatmap_w_skin_and_fat.R
+
+# Differential gene expression between blood naive Tconv cells and blood naive Treg cells: Heat map including all main cell types
+diff_expr_blood_naive_tconvs_blood_naive_tregs_heatmap_w_all_main_celltypes.R
+
+# Differential gene expression between skin Treg cells and blood naive Treg cells: Heat map
+diff_expr_skin_tregs_blood_naive_Tregs_heatmap.R
+
+# Differential gene expression between skin Treg cells and blood naive Treg cells: Heat map including fat Treg cells
+diff_expr_skin_tregs_blood_naive_Tregs_heatmap_w_fat.R
+
+# Differential gene expression between skin Treg cells and blood naive Treg cells: Heat map including all main cell types
+diff_expr_skin_tregs_blood_naive_Tregs_heatmap_w_all_main_celltypes.R
+
+
+
+
+######
+## Computation of 'Transcripts per million' (TPM) values in RNA sequencing data
+
+# Comptation of TPM values
+compute_tpm_values_rna_samples.R
+  
+  
+  
+  
+######
+## Definition and analysis of DMR-peak-gene links
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Heat maps
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_combi_heatmap.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Additional track plot (FOXP3)
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_additional_foxp3_trackplot.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Additional track plot (IL2RA)
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_additional_il2ra_trackplot.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Raw methylation heat maps for track plots
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_heatmaps_for_meth_tracks.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Expression bar charts for track plots
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_expr_barcharts_interesting_genes.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: DMR-peak-gene links: Expression bar chart for TNFRSF1B
+diff_meth_diff_acc_blood_naive_Tconvs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_expr_barcharts_TBFRSF1B.R
+
+# Skin Treg cells vs. blood naive Treg cells: DMR-peak-pairs (preparatory analysis for DMR-peak-gene links)
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_links_corr_meth_atac.R
+
+# Skin Treg cells vs. blood naive Treg cells: DMR-peak-gene links
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna.R
+
+# Skin Treg cells vs. blood naive Treg cells: DMR-peak-gene links: Heat maps
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_gene_links_combi_heatmap.R
+
+# Skin Treg cells vs. blood naive Treg cells: DMR-peak-gene links: Raw methylation heat maps for track plots.
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_heatmaps_for_meth_tracks.R
+
+# Skin Treg cells vs. blood naive Treg cells: DMR-peak-gene links: Expression bar charts for track plots.
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_expr_barcharts_interesting_genes.R
+  
+  
+  
+  
+######
+## Generation of track plots
+
+# Track plot generatation happened on multiple occasions. The corresponding scripts are included in the respective sections of this script overview.
+  
+  
+  
+  
+######
+## Enrichment analysis of hallmark gene sets
+
+# Snapshot of hallmark gene sets from MSigDB
+snapshot_msigdb_hallmark_gene_sets.R
+
+# Enrichment of hallmark gene sets in DMR-peak-gene links from the comparison between skin Treg cells and blood naive Treg cells
+diff_meth_diff_acc_skin_tregs_blood_naive_Tregs_dmr_peak_gene_links_corr_meth_atac_rna_hallm_enr_in_links_w_matching_tendencies.R
+  
+  
+  
+  
+######
+## Amplicon-based validation analysis of methylation differences 
+
+# Blood naive Treg cells vs. blood naive Tconv cells: Pilot run
+treg_tconv_amplicons_pilot_run_10_70.R 
+
+# Blood naive Treg cells vs. blood naive Tconv cells: Further donors
+treg_tconv_amplicons_additional_donors_07_2024.R
+
+# Blood naive Treg cells vs. blood naive Tconv cells: Combined visualization and statistical tests
+treg_tconv_amplicons_combined_visualisation_plus_stat_tests.R
+  
+  
+  
+  
+######
+## Transcription factor analyses
+
+# Homer: DMRs between skin Treg cells and blood naive Treg cells
+diff_meth_skin_tregs_blood_naive_tregs_tf_enrichments.R
+
+# Homer: Differentially accessible peaks between skin Treg cells and blood naive Treg cells.
+diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments.R
+
+# Homer: DMRs and differential peaks between skin Treg cells and blood naive Treg cells: Dot plot visualization
+diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_visualisation.R
+
+# Heat map showing methylation of predicted bZIP binding sites in skin Treg cells and blood naive Treg cells (with stat. tests)
+diff_meth_skin_tregs_blood_naive_tregs_bzip_site_heatmap.R  
+
+# Heat map showing methylation of predicted bHLH binding sites in skin Treg cells and blood naive Treg cells (with stat. tests)
+diff_meth_skin_tregs_blood_naive_tregs_bhlh_site_heatmap.R
+
+# Plots showing accessibility around predicted bZIP and bHLH binding sites in skin Treg cells and blood naive Treg cells
+diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_delve_more_into_discrepancies.R
+
+# Transcription factors with relevance for the comparison between skin Treg cells and blood naive Treg cells: RNA level (i.e. expression analysis, transcriptomic footprint analysis)
+diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_look_at_rna_level.R
+
+# Identification and track plot visualization of interesting c-Myc and USF1 binding sites (e.g. close to MLPH and GNA11)
+diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_plot_interesting_myc_and_usf1_binding_sites.R
+
+# Identification and track plot visualization of interesting c-Myc and USF1 binding sites (e.g. close to MLPH and GNA11): Expression bar charts for track plots
+diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_plot_interesting_myc_and_usf1_binding_sites_expr_barcharts_interesting_genes.R
+
+# Homer: Blood CCR8+ Treg cell positionings (Methylation level)
+skin_treg_blood_naive_treg_diff_meth_positioning_blood_ccr8_treg_region_characterisation.R
+
+# Homer: Blood CCR8+ Treg cell positionings (Accessibility level)
+skin_treg_blood_naive_treg_diff_acc_positioning_blood_ccr8_treg_region_characterisation.R
+
+# Homer: Blood CCR8+ Treg cell positionings (Methylation and accessibility level): Dot plot visualization
+skin_treg_blood_naive_treg_diff_meth_diff_acc_positioning_blood_ccr8_treg_common_homer_plots.R
+
+# Heat map showing methylation around predicted bZIP binding sites with respect to blood CCR8+ Treg cell positionings
+skin_treg_blood_naive_treg_diff_meth_positioning_blood_ccr8_treg_pred_bzip_sites_heatmap.R
+
+# Plots showing accessibility around predicted bZIP binding sites in skin Treg cells, blood CCR8+ Treg cells and blood naive Treg cells
+skin_treg_blood_naive_treg_diff_acc_positioning_blood_ccr8_treg_bzip_footprint_plots.R
+  
+  
+  
+  
+######
+## Analysis of blood CCR8+ Treg cell positionings
+
+# Blood CCR8+ Treg cell positionings: Methylation level: Initial analysis
+skin_treg_blood_naive_treg_diff_meth_positioning_blood_ccr8_treg.R
+
+# Blood CCR8+ Treg cell positionings: Accessibility level: Initial analysis
+skin_treg_blood_naive_treg_diff_acc_positioning_blood_ccr8_treg.R
+
+# Blood CCR8+ Treg cell positionings: Expression level: Initial analysis
+skin_treg_blood_naive_treg_diff_gex_positioning_blood_ccr8_treg.R
+
+# Blood CCR8+ Treg cell positionings: Statistical tests for methylation, accessibility and expression level
+skin_treg_blood_naive_treg_diff_meth_acc_gex_positioning_blood_ccr8_treg_fisher_tests.R
+
+# Blood CCR8+ Treg cell positionings with respect to DMR-peak pairs (preparatory analysis for blood CCR8+ Treg cell positioning with respect to DMR-peak-gene links)
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_tfidf.R
+  
+# Blood CCR8+ Treg cell positionings with respect to DMR-peak-gene links
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_w_tfidf.R
+
+# Blood CCR8+ Treg cell positionings with respect to DMR-peak-gene links: Statistical tests for methylation, accessibility and expression level
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_fisher_test_w_tfidf.R
+
+# Blood CCR8+ Treg cell positionings stratified by blood CCR8+ Treg cell donor.
+blood_ccr8_pos_stacked_barcharts_separate_for_ccr8_donors.R
+
+# Blood CCR8+ Treg cell positionings: Track plots
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_track_plots_sel_regions.R
+
+# Blood CCR8+ Treg cell positionings: Raw methylation heat maps shown in track plots
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_track_plots_sel_regions_heatmaps_for_meth_tracks.R
+
+# Blood CCR8+ Treg cell positionings: Expression bar charts for genes shown in track plots
+skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_expr_barcharts_interesting_genes.R
+  
+  
+  
+  
+######
+## Analyses based on T cell receptor clonotypes 
+
+# Differential gene expression between samples 29 and 30 (generation of blood CCR8+ Treg signature 2)
+rnatcr_diff_expr_donor6_bloodmemtreg_vs_bloodccr8treg.R
+
+# Cell type annotation in samples 24, 25, 28 and 29
+rnatcr_umap_clustering_anno_donor_7_sample_24.Rmd
+rnatcr_umap_clustering_anno_donor_7_sample_25.Rmd
+rnatcr_umap_clustering_anno_donor_6_sample_28.Rmd
+rnatcr_umap_clustering_anno_donor_6_sample_29.Rmd
+
+# Generation of complete Seurat objects with cell type annotation (for TCR matching)
+rnatcr_generate_seurat_objects_w_annotation_for_TCR_matching.R
+
+# Addition of clonotype information and TCR matching
+rnatcr_add_clonotype_info_and_match_clonotypes.R
+
+# Visualization of TCR clonotype sharing between cell types.
+rnatcr_visualise_clonotype_sharing_between_different_populations.R
+
+# Validation of loss of skin-Treg-cell-specific gene expression traits in blood CCR8+ Treg cells matched by TCR sequences
+tcr_matched_clones_validate_gex_loss_in_blood_ccr8_treg.R
+  
+  
+  
+  
+######
+## TE analyses
+
+# Enrichments of TEs in DMRs between skin Treg cells and blood naive Treg cells
+gen_loc_enrichm_dmrs_skin_naive.R
+
+# Enrichments of TEs in DMRs between skin Treg cells and blood naive Treg cells: Plot optimization
+gen_loc_enrichm_dmrs_skin_naive_optimise_plot_highlight_two_diffexp_tes.R
+
+# Enrichments of TEs in DMRs between skin Treg cells and blood naive Treg cells: Further plot optimization
+gen_loc_optimise_enrichment_plots_meth_for_paper.R
+
+# Enrichments of TEs in DMRs between skin Treg cells and blood naive Treg cells: Assignment of relevant TE insertion sites to genes
+gen_loc_annotate_te_locs_to_skin_treg_hypometh_regions_and_genes.R
+
+# Enrichments of TEs in DMRs between skin Treg cells and blood naive Treg cells: Track plots around TE insertion sites annotated to interesting genes
+gen_loc_annotate_te_locs_to_skin_treg_hypometh_regions_and_genes_interesting_track_plots.R
+
+# Enrichments of TEs in differential peaks between skin Treg cells and blood naive Treg cells
+gen_loc_enrichm_diffpeaks_skin_naive_atac.R
+
+# Box plots showing methylation and accessibility around LTR insertion sites (skin Treg cells and blood naive Treg cells)
+gen_loc_enrichm_diffpeaks_skin_naive_meth_atac_validation_boxplots_ltr.R
+
+# Box plots showing methylation and accessibility around SINE and DNA insertion sites (skin Treg cells and blood naive Treg cells)
+gen_loc_enrichm_diffpeaks_skin_naive_meth_atac_validation_boxplots_sine_dna.R
+
+# Box plots showing methylation and accessibility around LT, SINE and DNA insertion sites (skin Treg cells, fat Treg cells and blood naive Treg cells) with statistics
+gen_loc_ltr_sine_dna_hypomethylation_in_fat_tregs.R
+
+# Enrichment of TEs in 'skin Treg hypomethylation' regions stratified by blood CCR8+ Treg cell positioning
+gen_loc_enrichm_blood_ccr8_pos_meth_against_rem_reg.R
+
+# Enrichment of TEs in 'skin Treg hypomethylation' regions stratified by blood CCR8+ Treg cell positioning: Plot optimization
+gen_loc_enrichm_blood_ccr8_pos_meth_optimise_plot_for_publication.R
+
+# Enrichment of TEs in skin Treg hyperaccessibility regions stratified by blood CCR8+ Treg cell positioning
+gen_loc_enrichm_blood_ccr8_pos_atac_against_rem_reg.R
+
+# Box plots showing methylation and accessibility in TEs associated with 'skin Treg hypomethylation/hyperaccessibility' regions in skin Treg cells, blood CCR8+ Treg cells and blood naive Treg cells.
+gen_loc_enrichm_blood_ccr8_pos_validation_boxplots.R
+
+# Extraction of full-gene-body sequences (for TE expression analysis)
+get_sequences_for_gencode_genes.R
+
+# Quantification of TE expression
+cons_seq_te_expr_quantification_tespex.sh
+
+# Expression heat map of all TEs in all cell types
+cons_seq_te_expr_quantification_tespex_general_expr_heatmap.R
+
+# Differential expression analysis of TEs
+cons_seq_te_expr_quantification_tespex_diff_expr.R
+
+# Box plots showing methylation and accessibility around HERVIP10F-int and LTR45B insertion sites
+gen_loc_epigen_validation_tes_w_relevance_on_rna_level.R
+
+# Box plots showing methylation and accessibility around HERVIP10F-int and LTR45B insertion sites (also including fat Treg cells) with statistics
+gen_loc_selected_subfamiliies_hypomethylation_in_fat_tregs.R
+
+# Extraction of HERVIP10F-int and LTR45B insertion sites overlapping with 'skin Treg hypomethylation' DMRs
+cons_seq_te_expr_quantification_tespex_extract_hervip10f_ltr45b_pos_in_hypometh_dmrs.R
+
+# Statistical tests for all TE box plots where statistics iss relevant and that do not include fat Treg cells
+statistical_tests_all_boxplots_for_publication.R
+
+
+
+
+######
+## General plot optimizations
+
+# General plot optimizations
+optimise_figures_for_publication.R
+
+# Plot optimizations for the annotation of scRNA/TCR-seq data
+rnatcr_optimise_annotation_plots_for_publication.R
+
+
+
+
+######
+## Generation of supplementary tables
+
+# Generation of supplementary tables
+generate_supp_tables_for_publication.R

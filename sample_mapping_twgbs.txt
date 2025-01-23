@@ -1,0 +1,16 @@
+Cell_type	Sample_ID	Patient_ID	Sex	Patient_ID_readable	Sample_ID_readable
+Skin Treg	green-8	Donor_7	Female	Donor 7	Green 8
+Skin Treg	yellow-8	Donor_10	Female	Donor 10	Yellow 8
+Skin Treg	purple-8	Donor_11	Female	Donor 11	Purple 8
+Skin Tconv	green-9	Donor_7	Female	Donor 7	Green 9
+Skin Tconv	yellow-9	Donor_10	Female	Donor 10	Yellow 9
+Skin Tconv	purple-9	Donor_11	Female	Donor 11	Purple 9
+Blood CCR8+ Treg	yellow-5	Blood_Donor_6	Female	Blood donor 6	Yellow 5
+Blood CCR8+ Treg	purple-5	Blood_Donor_7	Female	Blood donor 7	Purple 5
+Blood CCR8+ Treg	white-5	Blood_Donor_8	Female	Blood donor 8	White 5
+Blood naive Treg	yellow-1	Blood_Donor_3	Female	Blood donor 3	Yellow 1
+Blood naive Treg	purple-1	Blood_Donor_4	Female	Blood donor 4	Purple 1
+Blood naive Treg	white-1	Blood_Donor_5	Female	Blood donor 5	White 1
+Blood naive Tconv	yellow-2	Blood_Donor_3	Female	Blood donor 3	Yellow 2
+Blood naive Tconv	purple-2	Blood_Donor_4	Female	Blood donor 4	Purple 2
+Blood naive Tconv	white-2	Blood_Donor_5	Female	Blood donor 5	White 2

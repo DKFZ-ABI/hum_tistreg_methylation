@@ -1,0 +1,932 @@
+---
+title: "UMAP, clustering and cell type annotation -- Donor 7; Sample 25"
+author: "Niklas Beumer"
+# The following lines were inspired by https://stackoverflow.com/questions/28894515/rmarkdown-directing-output-file-into-a-directory; 15-11-2021.
+date: "`r format(Sys.time(), '%d %b %Y')`"
+knit: (function(inputFile, encoding) { 
+  rmarkdown::render(inputFile,
+                    encoding=encoding, 
+                    output_dir = paste("/yyy/hm_treg_bs_rgnsbg/analysis", format(Sys.time(), "%m-%d-%y"), sep = "/")) })
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+This R markdown performs UMAP, clustering and cell type annotation for cells from sample 25 of donor 7 (blood CD4+CD25+CD45RO+ T cells).
+
+
+```{r}
+# Load required packages.
+library(Seurat)
+library(ggplot2)
+library(clustree)
+library(grid)
+library(gridExtra)
+library(testit)
+library(patchwork)
+library(viridis)
+
+# Specify a location on /xxx.
+b330_space <- "/xxx/"
+location <- paste0(b330_space, "nbeumer/hm_treg_bs_rgnsbg")
+
+# Create an output directory for plots, if it doesn't already exist.
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
+                     format(Sys.time(), "%m-%d-%y"), sep = "/")
+if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
+
+# Specify the output directory for RDS objects of plots.
+plot_rds_outdir <- paste0(location, "/plot_rds_objects")
+
+# Read in the Seurat object for donor 7 that I received from Charles.
+# The sample MD-scRNA_R22 contains blood CD4+ T cells.
+# The sample MD-scRNA_R24 contains blood CD4+CD25+ T cells.
+# The sample MD-scRNA_R25 contains blood CD4+CD25+CD45RO+ T cells.
+sc_data_file <- paste0(
+  b330_space, 
+  "imbusch/d100/10x_scRNA_human/scRNA-seq_analysis_donor7_CD4_all_samples.rds"
+)
+sc_data <- readRDS(sc_data_file)
+
+# Restrict the data to sample 25 (Blood CD4+CD25+CD45RO+ T cells).
+sc_data_25 <- subset(sc_data, subset = orig.ident %in% "MD-scRNA_R25")
+
+# Read in the list of genes that are differentially expressed between blood
+# naive Tregs and blood CCR8+ Tregs (according to bulk RNA-seq analysis).
+diffexp_bloodnaive_bloodccr8_file <- paste0(
+  location, 
+  "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Blood_CCR8+_TregBlood_naive_Treg_results_filtered_with_significance.txt"
+)
+diffexp_bloodnaive_bloodccr8 <- read.table(diffexp_bloodnaive_bloodccr8_file, 
+                                           header = T, 
+                                           stringsAsFactors = F)
+diffexp_bloodnaive_bloodccr8 <- diffexp_bloodnaive_bloodccr8[
+  diffexp_bloodnaive_bloodccr8$significant, 
+]
+diffexp_bloodnaive_bloodccr8$Signature_category <- sapply(
+  diffexp_bloodnaive_bloodccr8$log2FoldChange, 
+  FUN = function(x) {
+    paste0(ifelse(x > 0, 
+                  yes = "Blood_naive_Treg", 
+                  no = "Blood_CCR8_Treg"), 
+           "__hyperexpression")
+})
+
+# Read in the list of genes that are differentially expressed between blood 
+# memory Tregs and blood CCR8+ Tregs (according to scRNA/TCR-seq analysis).
+diffexp_bloodmem_bloodccr8_file <- paste0(
+  location, 
+  "/treg_hierarchies/scrnatcr_diff_expr_bloodmemtreg_vs_bloodccr8treg_bl_bloodmemtreg.txt"
+)
+diffexp_bloodmem_bloodccr8 <- read.table(diffexp_bloodmem_bloodccr8_file, 
+                                         header = T, 
+                                         stringsAsFactors = F)
+diffexp_bloodmem_bloodccr8 <- diffexp_bloodmem_bloodccr8[
+  diffexp_bloodmem_bloodccr8$significant, 
+]
+diffexp_bloodmem_bloodccr8$Signature_category <- sapply(
+  diffexp_bloodmem_bloodccr8$avg_log2FC, 
+  FUN = function(x) {
+    paste0(ifelse(x > 0, 
+                  yes = "Blood_CCR8_Treg", 
+                  no = "Blood_memory_Treg"), 
+           "__hyperexpression")
+})
+
+```
+
+## Highly variable features.
+
+I selected the 3,000 most variable features.
+
+```{r fig.height=7, fig.width=9}
+
+##################################################
+# Identification of highly variable features.
+##################################################
+
+# Identify 3,000 variable features
+sc_data_25 <- FindVariableFeatures(sc_data_25, nfeatures = 3000)
+
+# Generate a plot showing the variable features (With labels for the top-20.
+var_feature_plot <- LabelPoints(plot = VariableFeaturePlot(sc_data_25), 
+                                points = head(VariableFeatures(sc_data_25), 20), 
+                                repel = T,
+                                xnudge = 0, 
+                                ynudge = 0,
+                                force = 10)
+var_feature_pdf <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_var_features_plot.pdf")
+var_feature_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_var_features_plot.rds")
+pdf(var_feature_pdf, width = 9, height = 7)
+print(var_feature_plot)
+invisible(dev.off())
+print(var_feature_plot)
+saveRDS(var_feature_plot, var_feature_rds)
+
+```
+
+```{r}
+
+##############################################################
+# Scaling and centering.
+##############################################################
+
+# Scale and center the data for all genes. Correct for the number of 
+# detected features per cell.
+sc_data_25 <- ScaleData(sc_data_25, 
+                        features = rownames(sc_data_25),
+                        vars.to.regress = "nFeature_RNA")
+
+```
+
+
+
+## Principal component analysis. {.tabset}
+
+```{r}
+
+########################################
+# Principal component analysis
+########################################
+
+# Perform principal component analysis.
+# By default, this generates 50 principal components.
+sc_data_25 <- RunPCA(sc_data_25)
+
+```
+
+### Elbow plot
+
+```{r fig.height=4, fig.width=4}
+# Create an elbow plot.
+elbow_plot <- ElbowPlot(sc_data_25, ndims = 50)
+elbow_pdf <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_elbow_plot.pdf")
+elbow_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_elbow_plot.rds")
+pdf(elbow_pdf, width = 4, height = 4)
+print(elbow_plot)
+invisible(dev.off())
+saveRDS(elbow_plot, file = elbow_rds)
+print(elbow_plot)
+```
+
+
+### Top genes
+
+```{r fig.height=6, fig.width=10}
+# Visualise the top loadings for the first three PCs.
+loadings_plot <- VizDimLoadings(sc_data_25, dims = 1:3, ncol = 3)
+loadings_pdf <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_pca_loadings_plot.pdf")
+loadings_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_pca_loadings_plot.rds")
+pdf(loadings_pdf, width = 10, height = 6)
+print(loadings_plot)
+invisible(dev.off())
+saveRDS(loadings_plot, file = loadings_rds)
+print(loadings_plot)
+```
+
+## UMAP
+
+```{r}
+
+############
+# UMAP
+############
+
+# Specify the PC numbers to test.
+pc_numbers_to_test <- seq(10, 50, by = 10)
+
+# Iterate over the PC numbers and compute the UMAP space.
+for (i in pc_numbers_to_test) {
+  sc_data_25 <- RunUMAP(sc_data_25,
+                         dims = 1:i,
+                         reduction.name = paste0("UMAP_", i),
+                         reduction.key = paste0("UMAP", i, "_"))
+}
+
+```
+
+
+### UMAP space {.tabset}
+
+```{r}
+# Iterate over the PC numbers and generate plots showing the UMAP space.
+umap_sample_plots <- lapply(pc_numbers_to_test, FUN = function(x) {
+  DimPlot(sc_data_25, 
+          reduction = paste0("UMAP_", x),
+          group.by = "orig.ident")
+})
+
+# Save these plots.
+umap_sample_pdf <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_spaces_by_sample.pdf")
+umap_sample_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_spaces_by_sample.rds")
+pdf(umap_sample_pdf, width = 8, height = 5)
+for (i in 1:length(pc_numbers_to_test)) {
+  print(umap_sample_plots[[i]] + plot_annotation(title = paste(pc_numbers_to_test[i], "principal components")))
+}
+invisible(dev.off())
+saveRDS(umap_sample_plots, file = umap_sample_rds)
+
+```
+
+
+```{r fig.height=5, fig.width=8, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(pc_numbers_to_test)) {
+  cat("#### ", pc_numbers_to_test[i], " PCs", "\n")
+  print(umap_sample_plots[[i]])
+  cat("\n\n")
+}
+
+```
+
+### Quality in UMAP space {.tabset}
+
+```{r}
+
+# Plot interesting quality metrics in UMAP space.
+umap_qual_plots <- lapply(pc_numbers_to_test, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = paste0("UMAP_", x),
+              features = c("nCount_RNA", "nFeature_RNA", "percent.mt"))
+})
+  
+# Save these plots.
+umap_qual_pdf <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_spaces_by_qual.pdf")
+umap_qual_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_spaces_by_qual.rds")
+pdf(umap_qual_pdf, width = 8, height = 10)
+for (i in 1:length(pc_numbers_to_test)) {
+  print(umap_qual_plots[[i]] + plot_annotation(title = paste(pc_numbers_to_test[i], "principal components")))
+}
+invisible(dev.off())
+saveRDS(umap_qual_plots, file = umap_qual_rds)
+```
+
+```{r fig.height=10, fig.width=8, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(pc_numbers_to_test)) {
+  cat("#### ", pc_numbers_to_test[i], " PCs", "\n")
+  print(umap_qual_plots[[i]])
+  cat("\n\n")
+}
+
+```
+
+## Clustering {.tabset}
+
+```{r}
+# Specify the PC numbers to test for clustering.
+pc_nums_for_clustering <- seq(10, 50, 10)
+
+# Specify the resolutions to test.
+resolutions_to_test <- seq(0.1, 1, 0.1)
+
+# For each PC number to test, compute clustering results at each resolution.
+# Specify "algorithm = 4" in order to use the Leiden algorithm.
+# Plot clusters in UMAP space.
+all_cluster_plots <- list()
+for (pc_num in pc_nums_for_clustering) {
+  sc_data_25 <- FindNeighbors(sc_data_25, 
+                                    dims = 1:pc_num,
+                                    force.recalc = T)
+  this_pc_cluster_plots <- list()
+  for (resolution in resolutions_to_test) {
+    sc_data_25 <- FindClusters(sc_data_25,
+                                     resolution = resolution,
+                                     algorithm = 4)
+    clusters_name <- paste0("Clusters_", pc_num, "_res_", resolution)
+    sc_data_25[[clusters_name]] <- sc_data_25$seurat_clusters
+    clusters_plot <- DimPlot(sc_data_25, 
+                             reduction = paste0("UMAP_", pc_num), 
+                             group.by = clusters_name)
+    this_pc_cluster_plots[[as.character(resolution)]] <- clusters_plot
+  }
+  all_cluster_plots[[as.character(pc_num)]] <- this_pc_cluster_plots
+}
+
+# Save the plots.
+for (pc_num in pc_nums_for_clustering) {
+  for (resolution in resolutions_to_test) {
+    corresp_plot <- all_cluster_plots[[as.character(pc_num)]][[as.character(resolution)]]
+    outfile_snip <- paste0("/scrnatcr_donor7_sample25_umap_space_", 
+                           pc_num, 
+                           "_by_clusters_", 
+                           pc_num, 
+                           "_res_", 
+                           resolution)
+    outfile_pdf <- paste0(plot_outdir, outfile_snip, ".pdf")
+    outfile_rds <- paste0(plot_rds_outdir, outfile_snip, ".rds")
+    pdf(outfile_pdf, width = 5, height = 4)
+    print(corresp_plot)
+    invisible(dev.off())
+    # saveRDS(corresp_plot, file = outfile_rds)
+  }
+}
+
+```
+
+### 10 PCs {.tabset}
+
+```{r fig.height=4, fig.width=5, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(resolutions_to_test)) {
+  cat("#### Res.: ", resolutions_to_test[i], "\n")
+  print(all_cluster_plots$`10`[[i]])
+  cat("\n\n")
+}
+
+```
+
+### 20 PCs {.tabset}
+
+```{r fig.height=4, fig.width=5, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(resolutions_to_test)) {
+  cat("#### Res.: ", resolutions_to_test[i], "\n")
+  print(all_cluster_plots$`20`[[i]])
+  cat("\n\n")
+}
+
+```
+
+### 30 PCs {.tabset}
+
+```{r fig.height=4, fig.width=5, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(resolutions_to_test)) {
+  cat("#### Res.: ", resolutions_to_test[i], "\n")
+  print(all_cluster_plots$`30`[[i]])
+  cat("\n\n")
+}
+
+```
+
+### 40 PCs {.tabset}
+
+```{r fig.height=4, fig.width=5, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(resolutions_to_test)) {
+  cat("#### Res.: ", resolutions_to_test[i], "\n")
+  print(all_cluster_plots$`40`[[i]])
+  cat("\n\n")
+}
+
+```
+
+### 50 PCs {.tabset}
+
+```{r fig.height=4, fig.width=5, results='asis'}
+# The following code chunk was inspired by https://stackoverflow.com/questions/43636120/r-how-do-you-embed-plots-into-a-tab-in-rmarkdown-in-a-procedural-fashion; 22-11-2021.
+
+for (i in 1:length(resolutions_to_test)) {
+  cat("#### Res.: ", resolutions_to_test[i], "\n")
+  print(all_cluster_plots$`50`[[i]])
+  cat("\n\n")
+}
+
+```
+
+## Markers in UMAP space
+
+### General markers {.tabset}
+
+#### 10 PCs
+
+```{r fig.width=9, fig.height = 18}
+
+# Define the markers.
+general_markers <- c("FOXP3", "IKZF2", "SELL", "CCR7", "CD27", "CD28", "BACH2", "LEF1", "IL7R", "CCR8", "BATF", "PDCD1", "CD58", "PRF1", "GNLY", "CD44", "HLA-DRB1")
+
+# Generate and save the plots.
+plot_list <- lapply(general_markers, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_10",
+              features = x,
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B")
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_general_markers.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_general_markers.rds")
+png(outfile_png, width = 9, height = 15, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 20 PCs
+
+```{r fig.width=9, fig.height = 18}
+
+# Generate and save the plots.
+plot_list <- lapply(general_markers, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_20",
+              features = x,
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B")
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_general_markers.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_general_markers.rds")
+png(outfile_png, width = 9, height = 15, units = "in", res = 2000)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 30 PCs
+
+```{r fig.width=9, fig.height = 18}
+
+# Generate and save the plots.
+plot_list <- lapply(general_markers, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_30",
+              features = x,
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B")
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_general_markers.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_general_markers.rds")
+png(outfile_png, width = 9, height = 15, units = "in", res = 2000)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 40 PCs
+
+```{r fig.width=9, fig.height = 18}
+
+# Generate and save the plots.
+plot_list <- lapply(general_markers, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_40",
+              features = x,
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B")
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_general_markers.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_general_markers.rds")
+png(outfile_png, width = 9, height = 15, units = "in", res = 2000)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 50 PCs
+
+```{r fig.width=9, fig.height = 18}
+
+# Generate and save the plots.
+plot_list <- lapply(general_markers, FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_50",
+              features = x,
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B")
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_general_markers.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_general_markers.rds")
+png(outfile_png, width = 9, height = 15, units = "in", res = 2000)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+### Genes that are differentially expressed between blood naive Tregs and blood CCR8+ Tregs in our bulk RNA-seq data {.tabset}
+
+#### 10 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Extract the markers.
+categories <- unique(diffexp_bloodnaive_bloodccr8$Signature_category)
+naive_ccr8_diff_list <- lapply(categories, FUN = function(x) {
+  rownames(diffexp_bloodnaive_bloodccr8)[
+    diffexp_bloodnaive_bloodccr8$Signature_category == x
+  ]
+})
+names(naive_ccr8_diff_list) <- categories
+
+# Compute module scores.
+sc_data_25 <- AddModuleScore(sc_data_25, 
+                             features = naive_ccr8_diff_list,
+                             name = "Mod_score")
+slot_names <- c()
+for(i in 1:length(naive_ccr8_diff_list)) {
+  slot_name <- paste0("Mod_score_naive_ccr8_diff_", 
+                      gsub(" ", "_", names(naive_ccr8_diff_list)[i]))
+  slot_names <- c(slot_names, slot_name)
+  sc_data_25[[slot_name]] <- sc_data_25[[paste0("Mod_score", i)]][, 1]
+}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_10",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(naive_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 20 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_20",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(naive_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 30 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_30",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(naive_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 40 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_40",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(naive_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 50 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_50",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(naive_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+
+### Genes that are differentially expressed between blood memory Tregs and blood CCR8+ Tregs in our scRNA/scTCR-se data from donor 6 (comparison between samples 29 and 30) {.tabset}
+
+#### 10 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Extract the markers.
+categories <- unique(diffexp_bloodmem_bloodccr8$Signature_category)
+mem_ccr8_diff_list <- lapply(categories, FUN = function(x) {
+  rownames(diffexp_bloodmem_bloodccr8)[
+    diffexp_bloodmem_bloodccr8$Signature_category == x
+  ]
+})
+names(mem_ccr8_diff_list) <- categories
+
+# Compute module scores.
+sc_data_25 <- AddModuleScore(sc_data_25, 
+                             features = mem_ccr8_diff_list,
+                             name = "Mod_score")
+slot_names <- c()
+for(i in 1:length(mem_ccr8_diff_list)) {
+  slot_name <- paste0("Mod_score_mem_ccr8_diff_", 
+                      gsub(" ", "_", names(mem_ccr8_diff_list)[i]))
+  slot_names <- c(slot_names, slot_name)
+  sc_data_25[[slot_name]] <- sc_data_25[[paste0("Mod_score", i)]][, 1]
+}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_10",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(mem_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_10_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 20 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_20",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(mem_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_20_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 30 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_30",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(mem_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+
+#### 40 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_40",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(mem_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_40_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+#### 50 PCs
+
+```{r fig.width=9, fig.height = 3}
+
+# Generate and save the plots.
+plot_list <- lapply(1:length(slot_names), FUN = function(x) {
+  FeaturePlot(sc_data_25,
+              reduction = "UMAP_50",
+              features = slot_names[x],
+              order = T,
+              pt.size = 0.01) &
+    scale_colour_viridis_c(option = "B") &
+    ggtitle(names(mem_ccr8_diff_list)[x])
+})
+outfile_png <- paste0(plot_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.png")
+outfile_rds <- paste0(plot_rds_outdir, "/scrnatcr_donor7_sample25_umap_space_50_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds")
+png(outfile_png, width = 9, height = 3, units = "in", res = 750)
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+invisible(dev.off())
+saveRDS(plot_list, file = outfile_rds)
+
+# Print the plots to the HTML output.
+grid.draw(arrangeGrob(grobs = plot_list, ncol = 3))
+
+```
+
+## Relevant plots for annotation
+
+Cell type annotation is based on 30 PCs and a clustering resolution of 0.8.
+
+Signature 1: Based on the comparison between Blood CCR8+ Tregs and blood naive Tregs.
+
+Signature 2: Based on the comparison between Blood CCR8+ Tregs and blood memory Tregs.
+
+```{r fig.height=3, fig.width=9}
+
+# Read in relevant plots.
+relevant_plots <- list(
+  readRDS(paste0(
+    plot_rds_outdir, 
+    "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodnaive_boodccr8_diffgenes_mod_scores.rds"
+  ))[[1]],
+  readRDS(paste0(
+    plot_rds_outdir, 
+    "/scrnatcr_donor7_sample25_umap_space_30_by_expr_bloodmem_boodccr8_diffgenes_mod_scores.rds"
+  ))[[2]]
+)
+
+# Optimise plot titles.
+relevant_plots[[1]]$labels$title <- "Blood CCR8 sig. 1"
+relevant_plots[[2]]$labels$title <- "Blood CCR8 sig. 2"
+
+# Include these plots in the HTML output.
+grid.draw(arrangeGrob(grobs = relevant_plots, ncol = 3))
+```
+
+
+## Final cell type annotation
+
+Cell type annotation is based on 30 PCs and a clustering resolution of 0.8.
+
+```{r fig.height=4, fig.width=6}
+# Specify the final cell type annotations.
+categories <- c("Blood_CCR8_Tregs", "Other")
+final_annotations <- categories[c(2, 2, 2, 1, 1, 2, 2, 1, 2, 1, 1, 2, 2, 2)]
+
+# Append these annotations to the Seurat object.
+cluster_assignments <- sc_data_25$Clusters_30_res_0.8
+annotations_by_cell <- final_annotations[cluster_assignments]
+names(annotations_by_cell) <- colnames(sc_data_25)
+sc_data_25$Cell_type_annotation_30_res_0.8 <- annotations_by_cell
+
+# Specify a colour palette for the cell types.
+colours <- c("orange", "grey")
+names(colours) <- categories
+colours_by_cell <- colours[annotations_by_cell]
+sc_data_25$Cell_type_annotation_30_res_0.8_colours <- colours_by_cell
+
+# Generate and save a plot showing cells in UMAP space, coloured by their cell type assignments.
+plotting_data <- as.data.frame(Embeddings(sc_data_25, 
+                                          reduction = "UMAP_30"))
+colnames(plotting_data) <- c("UMAP_1", "UMAP_2")
+plotting_data$Cell_type <- factor(sc_data_25$Cell_type_annotation_30_res_0.8,
+                                  levels = categories)
+cell_type_plot <- ggplot(plotting_data) +
+  aes(x = UMAP_1, y = UMAP_2, colour = Cell_type) +
+  scale_colour_manual(breaks = categories[!(is.na(categories))],
+                      values = colours,
+                      labels = c("Blood CCR8+ Treg", "Other"),
+                      name = "Annotation") +
+  geom_point(size = 0.15) +
+  coord_fixed() +
+  guides(colour = guide_legend(label.hjust = 0,
+                               override.aes = list(size = 1.5))) +
+  xlab("UMAP 1") +
+  ylab("UMAP 2") +
+  theme_classic() +
+  theme(axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"))
+cell_type_plot_pdf <- paste0(
+  plot_outdir, 
+  "/scrnatcr_donor7_sample25_umap_space_20_by_final_anno_30_res_0.8.pdf"
+)
+cell_type_plot_rds <- paste0(
+  plot_rds_outdir, 
+  "/scrnatcr_donor7_sample25_umap_space_20_by_final_anno_30_res_0.8.rds"
+)
+pdf(cell_type_plot_pdf, width = 6, height = 4)
+print(cell_type_plot)
+invisible(dev.off())
+saveRDS(cell_type_plot, file = cell_type_plot_rds)
+print(cell_type_plot)
+```
+
+```{r}
+############################################################################
+# Save the Seurat object.
+############################################################################
+
+seur_outfile <- paste0(location, 
+                       "scrnatcr_donor7_sample25_seur_obj_umap_anno.rds")
+saveRDS(sc_data_25, file = seur_outfile)
+```
