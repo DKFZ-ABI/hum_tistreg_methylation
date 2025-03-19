@@ -1,4 +1,4 @@
-# This script generates the supplementary tables for the manuscript.
+# This script generates the supplementary tables for the Treg-WGBS manuscript.
 # Author: Niklas Beumer
 
 
@@ -72,7 +72,7 @@ diffpeaks_file <- paste0(
 diffpeaks <- read.table(diffpeaks_file, header = T, stringsAsFactors = F)
 diffgenes_file <- paste0(
   location, 
-  "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_results_filtered_with_significance.txt"
+  "/RNASeq/analysis_results/2025-03-04_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_w_donor_as_covariate_results_filtered_with_significance.txt"
 )
 diffgenes <- read.table(diffgenes_file, header = T, stringsAsFactors = F)
 links_file <- paste0(

@@ -1,6 +1,7 @@
-# This script examines scRNA/TCR-seq data of clone-matched skin Treg cells and 
-#   blood CCR8+ Treg cells and validates that the skin Treg cell gene expression 
-#   signature gets partly lost in blood CCR8+ Treg cells.
+# This script examines scRNA/TCR-seq data of clone matched skin Treg cells, 
+#   blood CCR8+ Treg cells and blood RA+ Treg cells and validates that the skin 
+#   Treg cell gene expression signature gets partly lost in blood CCR8+ Treg 
+#   cells.
 # Author: Niklas Beumer
 
 
@@ -11,12 +12,12 @@ library(ggplot2)
 
 
 # Define a location on /xxx.
-b330_space <- "/xxx/"
+b330_space <- "/xxx/internal/"
 location <- paste0(b330_space, "nbeumer/hm_treg_bs_rgnsbg")
 location_2 <- "/xxx/data/nbeumer"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -71,6 +72,20 @@ sc_data_relev <- lapply(sc_data, FUN = function(seur_obj) {
   return(seur_subs)
 })
 
+# Add bloodd naive Tregs that bear clonotypes that are shared between skin Tregs
+# and blood CCR8+ Tregs.
+sc_data_relev <- lapply(1:length(sc_data_relev), FUN = function(x) {
+  all_relev_clonotypes <- unique(sc_data_relev[[x]]$cdr3s_nt)
+  matching_blood_naive <- which(
+    sc_data[[x]]$Anno_Niklas_for_TCR_matching == "Blood_RA_Tregs" & 
+      sc_data[[x]]$cdr3s_nt %in% all_relev_clonotypes
+  )
+  matching_blood_naive_seur <- sc_data[[x]][, matching_blood_naive]
+  matching_blood_naive_seur$Cell_type <- "Blood CD45RA+ Treg"
+  new_seur_obj <- merge(sc_data_relev[[x]], matching_blood_naive_seur)
+  return(new_seur_obj)
+})
+
 # Extract skin Treg hyperexpression genes and blood naive Treg hyperexpression 
 # genes.
 skin_hyperexpr_genes <- diff_exp$Gene[diff_exp$log2FoldChange < 0]
@@ -87,6 +102,7 @@ sc_data_relev <- lapply(sc_data_relev, FUN = function(seur_obj) {
                              name = "Blood_naive_Treg_hyperexpr")
   return(seur_obj)
 })
+names(sc_data_relev) <- names(sc_data)
 
 # Save the Seurat objects with computed module scores.
 void <- lapply(names(sc_data_relev), FUN = function(x) {
@@ -115,76 +131,26 @@ module_scores_collected <- do.call(
       Module_score = c(seur_obj$Skin_Treg_hyperexpr1, 
                        seur_obj$Blood_naive_Treg_hyperexpr1)
     )
-    return(mod_score_df )
+    return(mod_score_df)
   })
-)
-
-# Perform statistical tests (Two-tailed Wilcoxon rank sum tests) assessing 
-# whether skin Tregs and blood CCR8+ Tregs display differences in the module 
-# scores.
-score_types <- c("Skin Treg hyperexpression", 
-                 "Blood naive Treg hyperexpression")
-wilcox_test_res <- lapply(names(sc_data_relev), FUN = function(x) {
-  wilcox_test_res_this_donor <- lapply(score_types, FUN = function(y) {
-    rel_mod_scores <- module_scores_collected[
-      module_scores_collected$Donor == x &
-        module_scores_collected$Module_score_type == y, 
-    ]
-    wilcox.test(
-      rel_mod_scores$Module_score[
-        rel_mod_scores$Cell_type == "Skin Treg"
-      ],
-      rel_mod_scores$Module_score[
-        rel_mod_scores$Cell_type == "Blood CCR8+ Treg"
-      ]
-    )
-  })
-  names(wilcox_test_res_this_donor) <- score_types
-  return(wilcox_test_res_this_donor)
-})
-names(wilcox_test_res) <- names(sc_data_relev)
-
-
-# Save the results of the statistical tests.
-wilcox_outfile <- paste0(
-  location, 
-  "/treg_hierarchies/clone_matched_skin_treg_blod_ccr8_treg_wilcox_test_res_on_skinnaivediffexp_mod_scores.rds"
-)
-saveRDS(wilcox_test_res, file = wilcox_outfile)
-
-# Prepare the test results for visualisation.
-test_res_for_plot <- data.frame(
-  Module_score_type = rep(score_types, each = 2),
-  x_pos = rep(c(1, 2), 2),
-  y_pos = unlist(lapply(score_types, FUN = function(x) {
-    rep(1.1 * 
-      max(
-        module_scores_collected$Module_score[
-          module_scores_collected$Module_score_type == x
-        ]
-      ), each = 2)
-  })),
-  Text = do.call(c, lapply(score_types, FUN = function(x) {
-    sapply(names(sc_data_relev), FUN = function(y) {
-      paste0("P = ", signif(wilcox_test_res[[y]][[x]]$p.value, 3))
-    })
-  }))
 )
 
 # Visualise the computed module scores and save the resulting plot.
+module_scores_collected$Cell_type <- factor(
+  module_scores_collected$Cell_type,
+  levels = c("Blood CD45RA+ Treg", "Skin Treg", "Blood CCR8+ Treg")
+)
 mod_score_plot <- ggplot() +
-  scale_y_continuous(expand = expansion(mult = c(0.02, 0.1)),
-                     name = "Module score") +
-  scale_fill_manual(breaks = c("Blood CCR8+ Treg", "Skin Treg"),
-                    values = c("orange", "blue"),
+  scale_y_continuous(name = "Module score") +
+  scale_fill_manual(
+    breaks = c("Blood CD45RA+ Treg", "Skin Treg", "Blood CCR8+ Treg"),
+    values = c("darkorchid1", "blue", "orange"),
                     name = "Cell type") +
   geom_violin(data = module_scores_collected,
               mapping = aes(x = Donor, y = Module_score, fill = Cell_type),
               draw_quantiles = c(0.25, 0.5, 0.75), 
               scale = "width",
               width = 0.7) +
-  geom_text(data = test_res_for_plot,
-            mapping = aes(label = Text, x = x_pos, y = y_pos)) +
   facet_wrap(~Module_score_type, nrow = 1, scales = "free_y") +
   xlab("Donor") +
   theme_classic() +
@@ -192,11 +158,11 @@ mod_score_plot <- ggplot() +
         axis.ticks = element_line(colour = "black"))
 mod_score_pdf <- paste0(
   plot_outdir, 
-  "/tcr_matched_skin_treg_blod_ccr8_treg_mod_scores_skin_treg_expr_signature.pdf"
+  "/tcr_matched_skin_treg_blood_ccr8_blood_naive_mod_scores_skin_treg_expr_signature.pdf"
 )
 mod_score_rds <- paste0(
   plot_rds_outdir, 
-  "/tcr_matched_skin_treg_blod_ccr8_treg_mod_scores_skin_treg_expr_signature.rds"
+  "/tcr_matched_skin_treg_blood_ccr8_blood_naive_mod_scores_skin_treg_expr_signature.rds"
 )
 pdf(mod_score_pdf, width = 8, height = 4)
 print(mod_score_plot)

@@ -147,8 +147,11 @@ diff_accessibility_blood_naive_tregs_skin_tregs_heatmap_w_all_main_celltypes.R
 ######
 ## Differential expression analysis in RNA sequencing data
 
-# Differential gene expression analysis
+# Differential gene expression analysis (unpaired sample structures)
 differential_gene_expression_all_celltypes.R
+
+# Differential gene expression analysis between blood naive Treg cells and blood naive Tconv cells (paired sample structure, using donor ID as model covariate)
+diff_expr_blood_naive_tconvs_blood_naive_tregs_w_donor_as_covariate.R
 
 # Differential gene expression between blood naive Tconv cells and blood naive Treg cells: Heat map
 diff_expr_blood_naive_tconvs_blood_naive_tregs_heatmap.R
@@ -269,10 +272,10 @@ diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments.R
 # Homer: DMRs and differential peaks between skin Treg cells and blood naive Treg cells: Dot plot visualization
 diff_meth_diff_acc_skin_tregs_blood_naive_tregs_tf_enrichments_visualisation.R
 
-# Heat map showing methylation of predicted bZIP binding sites in skin Treg cells and blood naive Treg cells (with stat. tests)
+# Heat map showing methylation of predicted bZIP binding sites in skin Treg cells and blood naive Treg cell
 diff_meth_skin_tregs_blood_naive_tregs_bzip_site_heatmap.R  
 
-# Heat map showing methylation of predicted bHLH binding sites in skin Treg cells and blood naive Treg cells (with stat. tests)
+# Heat map showing methylation of predicted bHLH binding sites in skin Treg cells and blood naive Treg cells
 diff_meth_skin_tregs_blood_naive_tregs_bhlh_site_heatmap.R
 
 # Plots showing accessibility around predicted bZIP and bHLH binding sites in skin Treg cells and blood naive Treg cells
@@ -317,17 +320,11 @@ skin_treg_blood_naive_treg_diff_acc_positioning_blood_ccr8_treg.R
 # Blood CCR8+ Treg cell positionings: Expression level: Initial analysis
 skin_treg_blood_naive_treg_diff_gex_positioning_blood_ccr8_treg.R
 
-# Blood CCR8+ Treg cell positionings: Statistical tests for methylation, accessibility and expression level
-skin_treg_blood_naive_treg_diff_meth_acc_gex_positioning_blood_ccr8_treg_fisher_tests.R
-
 # Blood CCR8+ Treg cell positionings with respect to DMR-peak pairs (preparatory analysis for blood CCR8+ Treg cell positioning with respect to DMR-peak-gene links)
 skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_tfidf.R
   
 # Blood CCR8+ Treg cell positionings with respect to DMR-peak-gene links
 skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_w_tfidf.R
-
-# Blood CCR8+ Treg cell positionings with respect to DMR-peak-gene links: Statistical tests for methylation, accessibility and expression level
-skin_treg_blood_naive_treg_diff_meth_diff_atac_intersections_full_dmrs_full_peaks_w_rna_fisher_test_w_tfidf.R
 
 # Blood CCR8+ Treg cell positionings stratified by blood CCR8+ Treg cell donor.
 blood_ccr8_pos_stacked_barcharts_separate_for_ccr8_donors.R
@@ -392,14 +389,11 @@ gen_loc_annotate_te_locs_to_skin_treg_hypometh_regions_and_genes_interesting_tra
 # Enrichments of TEs in differential peaks between skin Treg cells and blood naive Treg cells
 gen_loc_enrichm_diffpeaks_skin_naive_atac.R
 
-# Box plots showing methylation and accessibility around LTR insertion sites (skin Treg cells and blood naive Treg cells)
-gen_loc_enrichm_diffpeaks_skin_naive_meth_atac_validation_boxplots_ltr.R
+# Violin plots and related diagrams for LTR, SINE and DNA in skin Treg cells and blood naive Treg cells
+gen_loc_ltr_sine_dna_vioplots_etc_skin_bloodnaive.R
 
-# Box plots showing methylation and accessibility around SINE and DNA insertion sites (skin Treg cells and blood naive Treg cells)
-gen_loc_enrichm_diffpeaks_skin_naive_meth_atac_validation_boxplots_sine_dna.R
-
-# Box plots showing methylation and accessibility around LT, SINE and DNA insertion sites (skin Treg cells, fat Treg cells and blood naive Treg cells) with statistics
-gen_loc_ltr_sine_dna_hypomethylation_in_fat_tregs.R
+# Violin plots for LTR, SINE and DNA in skin Treg cells, fat Treg cells and blood naive Treg cells
+gen_loc_ltr_sine_dna_vioplots_etc_skin_fat_bloodnaive.R
 
 # Enrichment of TEs in 'skin Treg hypomethylation' regions stratified by blood CCR8+ Treg cell positioning
 gen_loc_enrichm_blood_ccr8_pos_meth_against_rem_reg.R
@@ -410,8 +404,8 @@ gen_loc_enrichm_blood_ccr8_pos_meth_optimise_plot_for_publication.R
 # Enrichment of TEs in skin Treg hyperaccessibility regions stratified by blood CCR8+ Treg cell positioning
 gen_loc_enrichm_blood_ccr8_pos_atac_against_rem_reg.R
 
-# Box plots showing methylation and accessibility in TEs associated with 'skin Treg hypomethylation/hyperaccessibility' regions in skin Treg cells, blood CCR8+ Treg cells and blood naive Treg cells.
-gen_loc_enrichm_blood_ccr8_pos_validation_boxplots.R
+# Violin plots and related diagrams for TEs associated with 'skin Treg hypomethylation/hyperaccessibility' regions in skin Treg cells, blood CCR8+ Treg cells and blood naive Treg cells
+gen_loc_all_plus_ltr_sine_line_dna_vioplots_etc_skin_bloodcr8_bloodnaive.R
 
 # Extraction of full-gene-body sequences (for TE expression analysis)
 get_sequences_for_gencode_genes.R
@@ -425,17 +419,14 @@ cons_seq_te_expr_quantification_tespex_general_expr_heatmap.R
 # Differential expression analysis of TEs
 cons_seq_te_expr_quantification_tespex_diff_expr.R
 
-# Box plots showing methylation and accessibility around HERVIP10F-int and LTR45B insertion sites
-gen_loc_epigen_validation_tes_w_relevance_on_rna_level.R
+# Violin plots and related diagrams for HERVIP10F-int and LTR45B in skin Treg cells, blood CCR8+ Treg cells and blood naive Treg cells
+gen_loc_hervip10f_ltr45b_vioplots_etc_skin_bloodcr8_bloodnaive.R
 
-# Box plots showing methylation and accessibility around HERVIP10F-int and LTR45B insertion sites (also including fat Treg cells) with statistics
-gen_loc_selected_subfamiliies_hypomethylation_in_fat_tregs.R
+# Violin plots for HERVIP10F-int and LTR45B in skin Treg cells, fat Treg cells and blood naive Treg cells
+gen_loc_hervip10f_ltr45b_vioplots_etc_skin_fat_bloodnaive.R
 
 # Extraction of HERVIP10F-int and LTR45B insertion sites overlapping with 'skin Treg hypomethylation' DMRs
 cons_seq_te_expr_quantification_tespex_extract_hervip10f_ltr45b_pos_in_hypometh_dmrs.R
-
-# Statistical tests for all TE box plots where statistics iss relevant and that do not include fat Treg cells
-statistical_tests_all_boxplots_for_publication.R
 
 
 

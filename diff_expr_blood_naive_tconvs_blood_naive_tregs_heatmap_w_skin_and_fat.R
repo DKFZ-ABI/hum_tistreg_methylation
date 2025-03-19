@@ -1,6 +1,6 @@
 # This script generates a heat map for those genes that are differentially 
-#   expressed between blood naive Tconv cells and blood naive Treg cells, also 
-#   visualising skin Treg cells and fat Treg cells.
+#   expressed between blood CD45RA+ Tconv cells and blood CD45RA+ Treg cells, 
+#   also visualising skin Treg cells and fat Treg cells.
 # Author: Niklas Beumer
 
 
@@ -12,7 +12,7 @@ library(viridis)
 
 
 # Specify a location on /xxx.
-location <- "/xxx/hm_treg_bs_rgnsbg"
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
 plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
@@ -29,8 +29,10 @@ cell_types_rna_spelling <- c("Blood_naive_Treg", "Blood_naive_Tconv",
                              "Skin_Treg", "Fat_Treg")
 
 # Read in the RNA sample mapping file and restrict to the relevant cell types.
-rna_sample_mapping_path <- paste0(location, 
-                                  "/sample_mapping_rnaseq_only_biol_rep.txt")
+rna_sample_mapping_path <- paste0(
+  location, 
+  "/sample_mapping_rnaseq_only_biol_rep_w_fat.txt"
+)
 rna_sample_mapping <- read.table(rna_sample_mapping_path, header = T, 
                                  stringsAsFactors = F, sep = "\t")
 rna_sample_mapping <- rna_sample_mapping[
@@ -40,7 +42,7 @@ rna_sample_mapping <- rna_sample_mapping[
 # blood naive Tconvs and blood naive Tregs.
 rna_sig_file <- paste0(
   location, 
-  "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_results_filtered_with_significance.txt"
+  "/RNASeq/analysis_results/2025-03-04_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_w_donor_as_covariate_results_filtered_with_significance.txt"
 )
 rna_sig <- read.table(rna_sig_file, header = T, stringsAsFactors = F)
 
@@ -57,7 +59,7 @@ rna_sig$Signature_category <- sapply(rna_sig$log2FoldChange, FUN = function(x) {
 })
 
 # Read in the TPM values and restrict them to the relevant cell types and genes.
-tpm_file <- paste0(location, "/RNASeq/tpm/tpm_all_w_fattreg.txt")
+tpm_file <- paste0(location, "/RNASeq/tpm/tpm_all_w_fat.txt")
 tpm <- read.table(tpm_file, header = T, stringsAsFactors = F)
 relevant_samples <- unlist(lapply(cell_types_rna_spelling, FUN = function(x) {
   rna_sample_mapping$Sample[rna_sample_mapping$Cell_type_wo_blank == x]
@@ -181,13 +183,9 @@ heatmap_drawing_string <- paste0(
   ", merge_legends = T)"
 )
 signature_heatmap_outfile_pdf <- paste0(
-  plot_outdir, 
-  "/diff_expr_blood_naive_tconv_blood_naive_treg_heatmap_w_skin_and_fat_treg.pdf"
-)
+  plot_outdir, "/diff_expr_blood_naive_tconv_blood_naive_treg_heatmap_w_skin_and_fat_treg.pdf")
 signature_heatmap_outfile_rds <- paste0(
-  plot_rds_outdir, 
-  "/diff_expr_blood_naive_tconv_blood_naive_treg_heatmap_w_skin_and_fat_treg.rds"
-)
+  plot_rds_outdir, "/diff_expr_blood_naive_tconv_blood_naive_treg_heatmap_w_skin_and_fat_treg.rds")
 pdf(signature_heatmap_outfile_pdf, width = 9, height = 10)
 eval(parse(text = heatmap_drawing_string))
 dev.off()

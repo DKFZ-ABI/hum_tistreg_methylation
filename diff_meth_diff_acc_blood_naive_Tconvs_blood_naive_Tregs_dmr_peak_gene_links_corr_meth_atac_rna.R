@@ -1,9 +1,9 @@
 # This R script looks at DMR-peak-gene links in the comparison between blood 
-#   naive Tconv cells and blood naive Treg cells and analyses correlations 
+#   CD45RA+ Tconv cells and blood CD45RA+ Treg cells and analyses correlations 
 #   between differential methylation, differential accessibility and 
 #   differential expression.
 # Author: Niklas Beumer
-
+# Run this script with 10 cores!!!
 
 
 # Load required packages.
@@ -19,12 +19,12 @@ library(rtracklayer)
 library(ggrepel)
 
 
-# Define a location on /yyy.
-b330_space <- "/yyy/"
-location <- paste0(b330_space, "yyy/hm_treg_bs_rgnsbg")
+# Define a location on /xxx.
+b330_space <- "/xxx/"
+location <- paste0(b330_space, "nbeumer/hm_treg_bs_rgnsbg")
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -77,7 +77,7 @@ rna_sample_mapping <- read.table(rna_sample_mapping_path, header = T,
 # and blood naive Tregs.
 diff_exp_file <- paste0(
   location, 
-  "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_results_filtered_with_significance.txt"
+  "/RNASeq/analysis_results/2025-03-04_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_w_donor_as_covariate_results_filtered_with_significance.txt"
 )
 diff_exp <- read.table(diff_exp_file, header = T, stringsAsFactors = F)
 diff_exp <- diff_exp[diff_exp$significant, ]
@@ -85,7 +85,7 @@ diff_exp <- diff_exp[diff_exp$significant, ]
 # Specify the prefix of the files containing genomic positions of exons, 
 # transcription start sites, genes etc.
 annotation_pref <- 
-  "/yyy/hg19_GRCh37_1000genomes/databases/gencode/gencode19/GencodeV19_"
+  "/xxx/assemblies/hg19_GRCh37_1000genomes/databases/gencode/gencode19/GencodeV19_"
 
 # Read in the file containing gene annotation for normal chromosomes.
 genes <- read.table(paste0(annotation_pref, "Genes_plain.bed.gz"), header = T, 

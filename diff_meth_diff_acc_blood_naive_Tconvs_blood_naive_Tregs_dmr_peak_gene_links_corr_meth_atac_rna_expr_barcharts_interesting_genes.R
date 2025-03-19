@@ -1,5 +1,5 @@
-# This script generates expression bar charts for interesting genes shown in 
-#   track plots for blood naive Treg cells and blood naive Tconv cells.
+# This script generates expression bar charts for interesting genes from the
+#   comparison between blood CD45RA+ Treg cells and blood CD45RA+ Tconv cells.
 # Author: Niklas Beumer
 
 
@@ -10,11 +10,11 @@ library(tidyr)
 library(testit)
 
 
-# Define a location on /yyy.
-location <- "/yyy/hm_treg_bs_rgnsbg"
+# Define a location on /xxx.
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -40,7 +40,7 @@ tpm_file <- paste0(location, "/RNASeq/tpm/tpm_all.txt")
 tpm <- read.table(tpm_file, header = T, stringsAsFactors = F)
 
 # Specify the genes to plot bar charts for.
-genes_to_plot <- c("SYTL3", "LRRN3", "TNFRSF8", "IL2RA", "BIRC3", "CTLA4", 
+genes_to_plot <- c("SYTL3", "LRRN3", "IL2RA", "BIRC3", "CTLA4", 
                    "IL2RB", "TIGIT")
 
 

@@ -1,6 +1,6 @@
-# This R script looks at genes that are differentially expressed between skin
-#   Treg cells and blood naive Treg cells and analyses where blood CCR8+ Treg
-#   cells are positioned in this comparison.
+# This R script looks at genes that are differentially expressed between skin 
+#   Treg cells and blood CD45RA+ Tregs and analyses where blood CCR8+ Treg cells 
+#   are positioned in this comparison.
 # Author: Niklas Beumer
 
 
@@ -14,16 +14,13 @@ library(GenomicRanges)
 library(testit)
 
 
-# Define a location on /yyy.
-location <- "/yyy/nbeumer/hm_treg_bs_rgnsbg"
+# Define a location on /xxx.
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis",
-                     format(Sys.time(), "%m-%d-%y"),
-                     sep = "/")
-if (!dir.exists(plot_outdir)) {
-  dir.create(plot_outdir)
-}
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
+                     format(Sys.time(), "%m-%d-%y"), sep = "/")
+if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
 # Specify the output directory for the RDS files containing the plots.
 plot_rds_outdir <- paste0(location, "/plot_rds_objects")
@@ -31,25 +28,19 @@ plot_rds_outdir <- paste0(location, "/plot_rds_objects")
 # Read in the sample mapping file.
 rna_sample_mapping_path <- paste0(location, 
                                   "/sample_mapping_rnaseq_only_biol_rep.txt")
-rna_sample_mapping <- read.table(
-  rna_sample_mapping_path,
-  header = T,
-  stringsAsFactors = F,
-  sep = "\t"
-)
+rna_sample_mapping <- read.table(rna_sample_mapping_path, header = T, 
+                                 stringsAsFactors = F, sep = "\t")
 
 # Specify the relevant cell types.
 relevant_cell_types <- c("Blood naive Treg", "Blood CCR8+ Treg", "Skin Treg")
 
-# Read in the list of differentially expressed genes between skin Tregs and
+# Read in the list of differentially expressed genes between skin Tregs and 
 # blood naive Tregs.
 diff_exp_file <- paste0(
-  location,
+  location, 
   "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Skin_TregBlood_naive_Treg_results_filtered_with_significance.txt"
 )
-diff_exp <- read.table(diff_exp_file,
-                       header = T,
-                       stringsAsFactors = F)
+diff_exp <- read.table(diff_exp_file, header = T, stringsAsFactors = F)
 diff_exp <- diff_exp[diff_exp$significant, ]
 
 # Read in the TPM values.
@@ -71,34 +62,37 @@ tpm <- read.table(tpm_file, header = T, stringsAsFactors = F)
 # Restrict the TPM data to the differentially expressed genes.
 tpm_diff_exp <- tpm[tpm$Gene_symbol %in% rownames(diff_exp), ]
 
-# For each cell type and each differential gene, compute the mean expression across the cells.
+# For each cell type and each differential gene, compute the mean expression 
+# across the cells.
 #-- Iterate over the three relevant cell types.
-avg_tpm_celltype_level <- sapply(
-  relevant_cell_types,
-  FUN = function(x) {
-    #-- Identify the samples from this cell type.
-    corresp_samples <- rna_sample_mapping$Sample[rna_sample_mapping$Cell_type == x]
-    #-- Extract TPM values for these samples.
-    corresp_tpm <- tpm_diff_exp[, corresp_samples]
-    rownames(corresp_tpm) <- tpm_diff_exp$Gene_symbol
-    #-- Transform the TPM values by log(100 * x + 1)
-    for (colname in colnames(corresp_tpm)) {
-      corresp_tpm[, colname] <- log1p(100 * corresp_tpm[, colname])
-    }
-    #-- Compute within-cell-type means.
-    means <- rowMeans(corresp_tpm)
-    #-- Return the means in the order in which the corresponding genes appear in the gene expression table.
-    return(means[rownames(diff_exp)])
+avg_tpm_celltype_level <- sapply(relevant_cell_types, FUN = function(x) {
+  #-- Identify the samples from this cell type.
+  corresp_samples <- rna_sample_mapping$Sample[
+    rna_sample_mapping$Cell_type == x
+  ]
+  #-- Extract TPM values for these samples.
+  corresp_tpm <- tpm_diff_exp[, corresp_samples]
+  rownames(corresp_tpm) <- tpm_diff_exp$Gene_symbol
+  #-- Transform the TPM values by log(100 * x + 1)
+  for (colname in colnames(corresp_tpm)) {
+    corresp_tpm[, colname] <- log1p(100 * corresp_tpm[, colname])
   }
-)
+  #-- Compute within-cell-type means.
+  means <- rowMeans(corresp_tpm)
+  #-- Return the means in the order in which the corresponding genes appear in 
+  #-- the gene expression table.
+  return(means[rownames(diff_exp)])
+})
 assert(all(rownames(avg_tpm_celltype_level) == rownames(diff_exp)))
 
 # Also collect the sample-level TPM values.
-tpm_sample_level <- do.call(cbind, lapply(
-  relevant_cell_types,
-  FUN = function(x) {
+tpm_sample_level <- do.call(
+  cbind, 
+  lapply(relevant_cell_types, FUN = function(x) {
     #-- Identify the samples from this cell type.
-    corresp_samples <- rna_sample_mapping$Sample[rna_sample_mapping$Cell_type == x]
+    corresp_samples <- rna_sample_mapping$Sample[
+      rna_sample_mapping$Cell_type == x
+    ]
     #-- Extract TPM values for these samples.
     corresp_tpm <- tpm_diff_exp[, corresp_samples]
     rownames(corresp_tpm) <- tpm_diff_exp$Gene_symbol
@@ -106,12 +100,13 @@ tpm_sample_level <- do.call(cbind, lapply(
     for (colname in colnames(corresp_tpm)) {
       corresp_tpm[, colname] <- log1p(100 * corresp_tpm[, colname])
     }
-    #-- Return the sample-level values in the order in which the corresponding
+    #-- Return the sample-level values in the order in which the corresponding 
     #-- genes appear in the gene expression table.
     return(corresp_tpm[rownames(diff_exp), ])
-  }
-))
+  })
+)
 assert(all(rownames(tpm_sample_level) == rownames(diff_exp)))
+
 
 
 
@@ -329,8 +324,8 @@ write.table(
 # genes. Once, use cell-type-level values and once use sample-level values.
 ############################################################################
 
-# Generate a version of the expression information, ordered by the difference between
-# blood CCR8+ Tregs and skin Tregs.
+# Generate a version of the expression information, ordered by the difference
+# between blood CCR8+ Tregs and skin Tregs.
 order_to_use <- order(
   combined_results$Scaled_log_TPM_diff_blood_ccr8_treg_skin_treg *
     sapply(
@@ -425,6 +420,12 @@ for (category in c("<", ">")) {
 
 ###############
 # Heat map on the sample level.
+
+# Re-order the columns in the sample-level TPM table. This is to make the order
+# of blood naive Treg samples consistent with other heat. maps shown in the
+# manuscript.
+tpm_sample_level_filtered_scaled_ordered <-
+  tpm_sample_level_filtered_scaled_ordered[, c(2, 4, 5, 1, 3, 6:14)]
 
 # Iterate over two large categories (decreasing expression during differentiation,
 # increasing expression during differentiation).

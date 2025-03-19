@@ -8,11 +8,11 @@
 library(ggplot2)
 
 
-# Define a location on /yyy.
-location <- "/yyy/nbeumer/hm_treg_bs_rgnsbg"
+# Define a location on /xxx.
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -25,35 +25,36 @@ plot_rds_outdir <- paste0(location, "/plot_rds_objects")
 # These data are paired (meaning that we have one blood value and one skin 
 # value from each donor).
 ccr8_percentages <- data.frame(
-  Donor = rep(1:5, 2),
-  Cell_type = rep(c("Blood Treg", "Skin Treg"), each = 5),
-  Percentage = c(29.4, 8.34, 15.6, 5.08, 22.5,
-                 80.5, 36.3, 83.7, 51.4, 85.0)
+  Donor = rep(1:6, 2),
+  Cell_type = rep(c("Blood Treg", "Skin Treg"), each = 6),
+  Percentage = c(29.4, 8.34, 15.6, 5.08, 22.5, 11.1,
+                 80.5, 36.3, 83.7, 51.4, 85.0, 97.8)
 )
 
-# Perform a two-tailed paired t test test assessing whether skin
+# Perform a two-tailed Wilcoxon signed rank test assessing whether skin
 # contains a higher percentage of CD45RA-CCR8+ Tregs than blood.
-t_test_res <- t.test(ccr8_percentages$Percentage[1:5],
-                     ccr8_percentages$Percentage[6:10],
-                     paired = T,
-                     alternative = "two.sided")
+wilcox_test_res <- wilcox.test(ccr8_percentages$Percentage[1:6],
+                               ccr8_percentages$Percentage[7:12],
+                               paired = T,
+                               alternative = "two.sided")
 
 # Save the test results.
 test_outfile <- paste0(
   location, 
-  "/facs_data_ccr8_expression_skin_bloood_tregs_paired_t_teest_res.rds"
+  "/facs_data_ccr8_expression_skin_bloood_tregs_paired_wilcoxon_test_res.rds"
 )
-saveRDS(t_test_res, file = test_outfile)
+saveRDS(wilcox_test_res, file = test_outfile)
 
 # Visualise the percentages.
-segments_df <- data.frame(x = rep(1, 5),
-                          xend = rep(2, 5),
-                          y = ccr8_percentages$Percentage[1:5],
-                          yend = ccr8_percentages$Percentage[6:10])
+segments_df <- data.frame(x = rep(1, 6),
+                          xend = rep(2, 6),
+                          y = ccr8_percentages$Percentage[1:6],
+                          yend = ccr8_percentages$Percentage[7:12])
 ccr8_perc_plot <- ggplot(ccr8_percentages) +
   aes(x = Cell_type, y = Percentage) +
   scale_y_continuous(
-    limits = c(0, 100), 
+    limits = c(0, 115),
+    breaks = c(0, 25, 50, 75, 100),
     expand = c(0, 0),
     name = "Percentage of CD45RA-CCR8+ cells\namong Treg cells [%]"
   ) +
@@ -61,7 +62,7 @@ ccr8_perc_plot <- ggplot(ccr8_percentages) +
   geom_segment(data = segments_df,
                mapping = aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_text(x = 1.5, y = 1.1 * max(ccr8_percentages$Percentage),
-            label = paste0("P = ", signif(t_test_res$p.value, 3))) +
+            label = paste0("P = ", signif(wilcox_test_res$p.value, 3))) +
   geom_segment(x = 1, 
                xend = 2, 
                y = 1.05 * max(ccr8_percentages$Percentage),

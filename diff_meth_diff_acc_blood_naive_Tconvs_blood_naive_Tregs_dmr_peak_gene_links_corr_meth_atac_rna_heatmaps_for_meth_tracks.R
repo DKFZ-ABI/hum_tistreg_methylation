@@ -1,6 +1,6 @@
 # This script generates heat maps with raw methylation values for the track
-#   plots showing DMR-peak-gene links from the comparison between blood naive
-#   Tconv cells and blood naive Treg cells.
+#   plots showing DMR-peak-gene links from the comparison between blood CD45RA+
+#   Tconv cells and blood CD45RA+ Treg cells.
 # Author: Niklas Beumer
 
 
@@ -16,7 +16,7 @@ library(viridis)
 
 
 # Define a location on /xxx.
-b330_space <- "/xxx/"
+b330_space <- "/xxx/OE0436/internal/"
 location <- paste0(b330_space, "nbeumer/hm_treg_bs_rgnsbg")
 
 # Create an output directory for plots, if it doesn't already exist.
@@ -35,7 +35,7 @@ links_file <<- paste0(
 links <- read.table(links_file, header = T, stringsAsFactors = F, sep = "\t")
 
 # Specify the indices of links for whose track plots we need heat maps.
-links_to_show_inds <- c(156, 148, 116, 87, 4, 3)
+links_to_show_inds <- c(104, 142, 134, 76, 3)
 
 # Generate a GRanges object containing the overlapping regions between 
 # the DMR and the peak in each relevant DMR-peak-gene link.

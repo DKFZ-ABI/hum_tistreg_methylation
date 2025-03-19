@@ -1,5 +1,5 @@
 # This script generates a heat map for those genes that are differentially 
-#   expressed between blood naive Tconv cells and blood naive Treg cells.
+#   expressed between blood CD45RA+ Tconv cells and blood CD45RA+ Treg cells.
 # Author: Niklas Beumer
 
 
@@ -10,11 +10,11 @@ library(circlize)
 library(viridis)
 
 
-# Specify a location on /yyy.
-location <- "/yyy/hm_treg_bs_rgnsbg"
+# Specify a location on /xxx.
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -37,7 +37,7 @@ rna_sample_mapping <- rna_sample_mapping[
 # blood naive Tconvs and blood naive Tregs.
 rna_sig_file <- paste0(
   location, 
-  "/RNASeq/analysis_results/2022-01-14_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_results_filtered_with_significance.txt"
+  "/RNASeq/analysis_results/2025-03-04_diff_gene_expr_DESEq2_Blood_naive_TregBlood_naive_Tconv_w_donor_as_covariate_results_filtered_with_significance.txt"
 )
 rna_sig <- read.table(rna_sig_file, header = T, stringsAsFactors = F)
 

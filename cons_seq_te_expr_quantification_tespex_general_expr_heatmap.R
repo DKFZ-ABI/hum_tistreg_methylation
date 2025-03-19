@@ -1,4 +1,4 @@
-# This script generates a gerenal expression heat map (across all TEs and cell
+# This script generates a general expression heat map (across all TEs and cell
 #   types) based on the counts returned by TEspeX.
 # Author: Niklas Beumer
 
@@ -11,11 +11,11 @@ library(viridis)
 library(testit)
 
 
-# Define a location on /yyy.
-location <- "/yyy/hm_treg_bs_rgnsbg"
+# Define a location on /xxx.
+location <- "/xxx/nbeumer/hm_treg_bs_rgnsbg"
 
 # Create an output directory for plots, if it doesn't already exist.
-plot_outdir <- paste("/xxx/hm_treg_bs_rgnsbg/analysis", 
+plot_outdir <- paste("/yyy/hm_treg_bs_rgnsbg/analysis", 
                      format(Sys.time(), "%m-%d-%y"), sep = "/")
 if (!dir.exists(plot_outdir)) {dir.create(plot_outdir)}
 
@@ -204,7 +204,7 @@ expr_heatmap_sample <- Heatmap(
   col = colorRamp2(seq(min(relevant_matr, na.rm = T), 
                        max(relevant_matr, na.rm = T), 
                        length.out = 200), 
-                   mako(200)),
+                   rev(mako(250))[51:250]),
   cluster_rows = F,
   cluster_columns = relevant_matr_hclust,
   show_row_names = F,
@@ -214,7 +214,8 @@ expr_heatmap_sample <- Heatmap(
   heatmap_legend_param = list(
     title = "Expression\n[raw counts]\n", 
     labels_gp = gpar(fontsize = 15), 
-    title_gp = gpar(fontsize = 17, fontface = "bold"))
+    title_gp = gpar(fontsize = 17, fontface = "bold")),
+  na_col = "seashell"
 )
 heatmap_outfile_pdf <- paste0(
   plot_outdir, 
@@ -285,7 +286,7 @@ expr_heatmap_sample <- Heatmap(
   col = colorRamp2(seq(min(relevant_matr, na.rm = T), 
                        max(relevant_matr, na.rm = T), 
                        length.out = 200), 
-                   mako(200)),
+                   rev(mako(250))[51:250]),
   cluster_rows = F,
   cluster_columns = relevant_matr_hclust,
   show_row_names = F,
@@ -295,7 +296,8 @@ expr_heatmap_sample <- Heatmap(
   heatmap_legend_param = list(
     title = "Expression\n[TPM]\n", 
     labels_gp = gpar(fontsize = 15), 
-    title_gp = gpar(fontsize = 17, fontface = "bold"))
+    title_gp = gpar(fontsize = 17, fontface = "bold")),
+  na_col = "seashell"
 )
 heatmap_outfile_pdf <- paste0(
   plot_outdir, 
@@ -366,7 +368,7 @@ expr_heatmap_sample <- Heatmap(
   col = colorRamp2(seq(min(relevant_matr, na.rm = T), 
                        max(relevant_matr, na.rm = T), 
                        length.out = 200), 
-                   mako(200)),
+                   rev(mako(250))[51:250]),
   cluster_rows = F,
   cluster_columns = relevant_matr_hclust,
   show_row_names = F,
@@ -376,7 +378,8 @@ expr_heatmap_sample <- Heatmap(
   heatmap_legend_param = list(
     title = "Expression\n[log(100*TPM+1)]\n", 
     labels_gp = gpar(fontsize = 15), 
-    title_gp = gpar(fontsize = 17, fontface = "bold"))
+    title_gp = gpar(fontsize = 17, fontface = "bold")),
+  na_col = "seashell"
 )
 heatmap_outfile_pdf <- paste0(
   plot_outdir, 
@@ -419,7 +422,7 @@ expr_heatmap_celltype <- Heatmap(
   col = colorRamp2(seq(min(relevant_matr, na.rm = T), 
                        max(relevant_matr, na.rm = T), 
                        length.out = 200), 
-                   mako(200)),
+                   rev(mako(250))[51:250]),
   cluster_rows = F,
   cluster_columns = relevant_matr_hclust,
   show_row_names = T,
@@ -428,7 +431,8 @@ expr_heatmap_celltype <- Heatmap(
   heatmap_legend_param = list(
     title = "Mean\nexpression\n[TPM]\n", 
     labels_gp = gpar(fontsize = 15), 
-    title_gp = gpar(fontsize = 17, fontface = "bold"))
+    title_gp = gpar(fontsize = 17, fontface = "bold")),
+  na_col = "seashell"
 )
 heatmap_outfile_pdf <- paste0(
   plot_outdir, 
@@ -471,7 +475,7 @@ expr_heatmap_celltype <- Heatmap(
   col = colorRamp2(seq(min(relevant_matr, na.rm = T), 
                        max(relevant_matr, na.rm = T), 
                        length.out = 200), 
-                   mako(200)),
+                   rev(mako(250))[51:250]),
   cluster_rows = F,
   cluster_columns = relevant_matr_hclust,
   show_row_names = T,
@@ -480,7 +484,8 @@ expr_heatmap_celltype <- Heatmap(
   heatmap_legend_param = list(
     title = "Mean\nexpression\n[log(100*TPM+1)]\n", 
     labels_gp = gpar(fontsize = 15), 
-    title_gp = gpar(fontsize = 17, fontface = "bold"))
+    title_gp = gpar(fontsize = 17, fontface = "bold")),
+  na_col = "seashell"
 )
 heatmap_outfile_pdf <- paste0(
   plot_outdir, 
